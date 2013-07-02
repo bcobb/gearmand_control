@@ -3,7 +3,7 @@ require 'gearmand_control'
 describe GearmandControl do
 
   before do
-    @control = GearmandControl.new
+    @control = GearmandControl.new(4730)
   end
 
   after do

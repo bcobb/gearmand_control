@@ -6,10 +6,14 @@ class GearmandControl
   UNSTARTED = :unstarted unless defined? UNSTARTED
 
   class TestFailed < RuntimeError ; end
+
+  attr_reader :address
   
-  def initialize
-    @command = "gearmand"
+  def initialize(port)
+    @port = port
+    @command = 'gearmand'
     @io = UNSTARTED
+    @address = ['localhost', port].join(':')
   end
 
   def pid
@@ -17,7 +21,8 @@ class GearmandControl
   end
 
   def start
-    @io = IO.popen('gearmand')
+    process = [@command, '-p', @port]
+    @io = IO.popen(process.map(&method(:String)))
   end
 
   def started?
@@ -26,7 +31,7 @@ class GearmandControl
 
   def stop(signal = :TERM)
     if started?
-      Process.kill(:TERM, pid)
+      Process.kill(signal, pid)
       @io.close
       @io = UNSTARTED
     end
@@ -35,10 +40,12 @@ class GearmandControl
   def test!
     socket = nil
 
-    Timeout.timeout(0.05, TestFailed) do
+    Timeout.timeout(0.5, TestFailed) do
       begin
         socket = TCPSocket.new('localhost', 4730)
       rescue Errno::ECONNREFUSED
+        sleep (rand / 100.0)
+
         retry
       ensure
         socket.close unless socket.nil?
