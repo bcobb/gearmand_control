@@ -23,6 +23,7 @@ class GearmandControl
   def start
     process = [@command, '-p', @port]
     @io = IO.popen(process.map(&method(:String)))
+    test!
   end
 
   def started?
